@@ -1,0 +1,40 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.6/handlebars.js" integrity="sha256-ZafrO8ZXERYO794Tx1hPaAcdcXNZUNmXufXOSe0Hxj8=" crossorigin="anonymous"></script>
+
+<div id="content"></div>
+
+<script id="handlebars-demo" type="text/x-handlebars-template">
+  <div>
+    {{#each this}} <h1>Name : {{name}} </h1> Value : {{value}} <br> {{/each}}
+  </div>
+</script>
+
+
+<script type="text/javascript">
+  fetch_json().then(res => {
+      console.log(res);
+
+      var template = document.getElementById('handlebars-demo').innerHTML;
+      //Compile the template data into a function
+      var templateScript = Handlebars.compile(template);
+      var html = templateScript(res);
+      $('#content').html(html);
+
+  })
+
+
+  function getTestData () {
+    return [{
+    "name": "john doe",
+    "value": "developer"
+  }, {
+    "name": "bob boby",
+    "value": "developer2"
+  }];
+  }
+
+  async function fetch_json() {
+      const rawResponse = await fetch('http://localhost:9099/test');
+      return await rawResponse.json();
+  }
+</script>
