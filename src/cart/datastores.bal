@@ -14,19 +14,15 @@ public class InMemoryStore {
         if (self.store.hasKey(userId)) {
             Cart existingCart = self.store.get(userId);
             CartItem[] existingItems = existingCart.items;
-            boolean isitemExist = false;
-            foreach CartItem item in existingItems {
-                if (item.product_id == productId) {
-                    isitemExist = true;
-                }
-            }
-            if (isitemExist) {
+            CartItem[] matchedItem = from CartItem item in existingItems
+            where item.product_id == productId
+            limit 1
+            select item;
+            if (matchedItem.length()==1) {
                 //Update Quantitly
-                //TODO see if we can reduce code
-                foreach CartItem item in existingItems {
-                    if (item.product_id == productId) {
-                        item.quantity = item.quantity + quantity;
-                    }
+                CartItem item = matchedItem[0];
+                if (item.product_id == productId) {
+                    item.quantity = item.quantity + quantity;
                 }
             } else {
                 //Add item
@@ -51,9 +47,6 @@ public class InMemoryStore {
         return self.store.get(userId);
     }
 }
-
-
-
 
 public class RedisStore {
     //TODO impl

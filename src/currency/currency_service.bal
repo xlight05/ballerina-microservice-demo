@@ -1,48 +1,55 @@
 import ballerina/grpc;
 import ballerina/io;
-import ballerina/lang.'float as float;
+import ballerina/lang.'decimal as decimal;
 
 listener grpc:Listener ep = new (9093);
-
+configurable string currencyJsonPath = "./data/currency_conversion.json";
 @grpc:ServiceDescriptor {descriptor: ROOT_DESCRIPTOR_DEMO, descMap: getDescriptorMapDemo()}
 service "CurrencyService" on ep {
-    map<string> currencyMap;
+    final map<decimal> & readonly currencyMap;
 
     function init() returns error? {
-        string jsonFilePath = "./data/currency_conversion.json";
-        json currencyJson = check io:fileReadJson(jsonFilePath);
-        self.currencyMap = check currencyJson.cloneWithType();
+        json currencyJson = check io:fileReadJson(currencyJsonPath);
+        self.currencyMap = check parseCurrencyJson(currencyJson).cloneReadOnly();
     }
 
     remote function GetSupportedCurrencies(Empty value) returns GetSupportedCurrenciesResponse|error {
         return {currency_codes: self.currencyMap.keys()};
-        
+
     }
     remote function Convert(CurrencyConversionRequest value) returns Money|error {
         Money moneyFrom = value.'from;
-
-        final float fractionSize = float:pow(10, 9);
+        final decimal fractionSize =1000000000;
         //From Unit
-        float pennys = <float> moneyFrom.nanos / fractionSize;
-        float totalUSD = <float> moneyFrom.units + pennys;
+        decimal pennys = <decimal> moneyFrom.nanos / fractionSize;
+        decimal totalUSD = <decimal>moneyFrom.units + pennys;
 
         //UNIT Euro
-        float rate = check float:fromString(self.currencyMap.get(moneyFrom.currency_code));
-        float euroAmount = totalUSD/rate;
+        decimal rate = self.currencyMap.get(moneyFrom.currency_code);
+        decimal euroAmount = totalUSD / rate;
 
         //UNIT to Target
-        float targetRate = check float:fromString(self.currencyMap.get(value.to_code));
-        float targetAmount = euroAmount*targetRate;
+        decimal targetRate = self.currencyMap.get(value.to_code);
+        decimal targetAmount = euroAmount * targetRate;
 
-        int newUnits = <int> targetAmount.floor();
-        int newNanos = <int> float:floor((targetAmount-<float>newUnits)*fractionSize);
+        int units = <int>targetAmount.floor();
+        int nanos = <int>decimal:floor((targetAmount - <decimal>units) * fractionSize);
 
-        Money money = {
+        return {
             currency_code: value.to_code,
-            nanos: newNanos,
-            units: newUnits
+            nanos,
+            units
         };
-        return money;
     }
 }
 
+isolated function parseCurrencyJson(json jsonContents) returns map<decimal>|error {
+    map<decimal> currencies = {};
+    map<string> originalValues = check jsonContents.cloneWithType();
+
+    foreach string key in originalValues.keys() {
+        string value = originalValues.get(key);
+        currencies[key] = check decimal:fromString(value);
+    }
+    return currencies;
+}

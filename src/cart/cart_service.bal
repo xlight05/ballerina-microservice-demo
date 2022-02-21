@@ -7,7 +7,7 @@ listener grpc:Listener ep = new (9092);
 
 @grpc:ServiceDescriptor {descriptor: ROOT_DESCRIPTOR_DEMO, descMap: getDescriptorMapDemo()}
 service "CartService" on ep {
-    DataStore store = new InMemoryStore();
+    final DataStore store;
 
     function init() {
         if (redisHost == "" && redisPassword == "") {

@@ -1,13 +1,46 @@
 import ballerina/http;
+import ballerina/os;
 
 listener http:Listener ep = check new http:Listener(9098);
+const string userId = "1";
+const string userCurrency = "USD";
+boolean is_cymbal_brand = os:getEnv("CYMBAL_BRANDING") == "true";
 
+type ProductView record {
+    Product product;
+    Money price;
+};
 service / on ep {
+    
+    resource function get .() returns json|error {
 
-    resource function get .() returns json {
-        
-
+        string[] supportedCurrencies = check getSupportedCurrencies();
+        Product[] products = check getProducts();
+        Cart cart = check getCart(userId);
+        ProductView[] productView = [];
+        foreach Product product in products {
+            productView.push({
+                product,
+                price: check convertCurrency(product.price_usd, userCurrency)
+            });
+        }
+        string platformEnv = os:getEnv("ENV_PLATFORM");
+        if (platformEnv == "") {
+            platformEnv = "local";
+        }
         return {
+            session_id : userId,
+            request_id : userId,
+            user_currency : userCurrency,
+            show_currency : true,
+            currencies : supportedCurrencies,
+            products : productView.toJson(),
+            cart_size : cart.items.length(),
+            banner_color: os:getEnv("BANNER_COLOR"),
+            ad : check chooseAd([]),
+            platform_css : platformEnv,
+            platform_name : platformEnv,
+            is_cymbal_brand : is_cymbal_brand
         };
     }
 

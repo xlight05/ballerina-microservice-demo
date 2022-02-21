@@ -31,7 +31,8 @@ class CardValidator {
     }
 
     isolated function isValid() returns CardCompany|error {
-        string card = regex:replaceAll(self.card, "[^0-9]+", ""); // remove all non-numerics
+        // remove all non-numerics
+        string card = regex:replaceAll(self.card, "[^0-9]+", "");
         if ((card.length() < 13) || (card.length() > 19)) {
             return error CardValidationError("failed length check");
         }
@@ -53,7 +54,6 @@ class CardValidator {
     }
 
     isolated function isLuhnValid() returns boolean|error {
-        // number must be validated as 0..9 numeric first!!
         int digits = self.card.length();
         int oddOrEven = digits & 1;
         int sum = 0;

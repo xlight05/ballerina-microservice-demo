@@ -31,7 +31,7 @@ service "EmailService" on ep {
         OrderResult orderRes = value.'order;
         string htmlBody = self.getConfirmationHtml(orderRes).toString();
         gmail:MessageRequest messageRequest = {
-            recipient: value.email, // Recipient's email address
+            recipient: value.email,
             subject: "Order Confirmation",
             messageBody: htmlBody,
             contentType: gmail:TEXT_HTML
@@ -40,15 +40,14 @@ service "EmailService" on ep {
         gmail:Message|error sendMessageResponse = gmailClient->sendMessage(messageRequest);
 
         if (sendMessageResponse is gmail:Message) {
-            // If successful, print the message ID and thread ID.
             log:printInfo("Sent Message ID: " + sendMessageResponse.id);
             log:printInfo("Sent Thread ID: " + sendMessageResponse.threadId);
         } else {
-            log:printError("Error: ", 'error = sendMessageResponse);
+            log:printError("Error sending confirmation mail ", 'error = sendMessageResponse);
         }
         return {};
     }
-
+    
     isolated function getConfirmationHtml(OrderResult res) returns xml {
         string fontUrl = "https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap";
 
