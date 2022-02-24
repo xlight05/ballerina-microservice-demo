@@ -9,7 +9,7 @@ function paymentTest() returns error? {
             nanos: 990000000
         },
         credit_card: {
-            credit_card_number: "4444444444444448",
+            credit_card_number: "4432-8015-6152-0454",
             credit_card_cvv: 123,
             credit_card_expiration_year: 2023,
             credit_card_expiration_month: 10

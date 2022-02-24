@@ -7,7 +7,7 @@ listener grpc:Listener ep = new (9092);
 
 @grpc:ServiceDescriptor {descriptor: ROOT_DESCRIPTOR_DEMO, descMap: getDescriptorMapDemo()}
 service "CartService" on ep {
-    final DataStore store;
+    private final DataStore store;
 
     function init() {
         if (redisHost == "" && redisPassword == "") {
@@ -20,17 +20,23 @@ service "CartService" on ep {
     }
 
     remote function AddItem(AddItemRequest value) returns Empty|error {
-        self.store.add(value.user_id, value.item.product_id, value.item.quantity);
+        lock {
+            self.store.add(value.user_id, value.item.product_id, value.item.quantity);
+        }
         log:printInfo("Product " + value.item.product_id + " Added to the cart");
         return {};
     }
     remote function GetCart(GetCartRequest value) returns Cart|error {
-        Cart cart = self.store.getCart(value.user_id);
-        log:printInfo("User " + value.user_id + " cart retrieved");
-        return cart;
+        lock {
+            Cart cart = self.store.getCart(value.user_id);
+            log:printInfo("User " + value.user_id + " cart retrieved");
+            return cart.cloneReadOnly();
+        }
     }
     remote function EmptyCart(EmptyCartRequest value) returns Empty|error {
-        self.store.emptyCart(value.user_id);
+        lock {
+            self.store.emptyCart(value.user_id);
+        }
         log:printInfo("User " + value.user_id + " cart emptied");
         return {};
     }

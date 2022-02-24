@@ -25,15 +25,13 @@ class CardValidator {
     final int expireMonth;
 
     isolated function init(string card, int expireYear, int expireMonth) {
-        self.card = card;
+        self.card = regex:replaceAll(card, "[^0-9]+", "");
         self.expireYear = expireYear;
         self.expireMonth = expireMonth;
     }
 
     isolated function isValid() returns CardCompany|error {
-        // remove all non-numerics
-        string card = regex:replaceAll(self.card, "[^0-9]+", "");
-        if ((card.length() < 13) || (card.length() > 19)) {
+        if ((self.card.length() < 13) || (self.card.length() > 19)) {
             return error CardValidationError("failed length check");
         }
 

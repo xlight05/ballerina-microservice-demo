@@ -13,6 +13,8 @@ configurable string recommandUrl = "localhost";
 final RecommendationServiceClient recommandClient = check new ("http://"+recommandUrl+":9090");
 configurable string adUrl = "localhost";
 final AdServiceClient adClient = check new ("http://"+adUrl+":9099");
+configurable string checkoutUrl = "localhost";
+final CheckoutServiceClient checkoutClient = check new ("http://"+checkoutUrl+":9094");
 
 isolated function getSupportedCurrencies() returns string[]|error {
     GetSupportedCurrenciesResponse|grpc:Error supportedCurrencies = currencyClient->GetSupportedCurrencies({});
@@ -145,4 +147,13 @@ isolated function getAd(string[] ctxKeys) returns Ad[]|error {
 isolated function chooseAd(string[] ctxKeys) returns Ad|error {
     Ad[] ads = check getAd(ctxKeys);
     return ads[check random:createIntInRange(0, ads.length())];
+}
+
+isolated function checkoutCart(PlaceOrderRequest req) returns OrderResult|error {
+    PlaceOrderResponse|error placeOrderResponse = checkoutClient->PlaceOrder(req);
+    if (placeOrderResponse is error) {
+        log:printError("failed to call placeOrder from checkout service", 'error = placeOrderResponse);
+        return placeOrderResponse;
+    }
+    return placeOrderResponse.'order;
 }

@@ -2,14 +2,14 @@ import ballerina/random;
 
 readonly class AdStore {
 
-    map<Ad[]> & readonly ads;
+    final map<Ad[]> & readonly ads;
     private final int MAX_ADS_TO_SERVE = 2;
 
     isolated function init() {
         self.ads =  getAds().cloneReadOnly();
     }
 
-    public isolated function getRandomAds() returns Ad[]|random:Error {
+    public isolated function getRandomAds() returns Ad[]|error {
         Ad[] allAds = [];
 
         //TODO issue can we not pass array to varargs
@@ -27,6 +27,9 @@ readonly class AdStore {
     }
 
     public isolated function getAdsByCategory(string category) returns Ad[] {
+        if (!self.ads.hasKey(category)){
+            return [];
+        }
         return self.ads.get(category);
     }
 }

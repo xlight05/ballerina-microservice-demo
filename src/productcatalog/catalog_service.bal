@@ -7,6 +7,7 @@ configurable string productJsonPath = "./resources/products.json";
 @grpc:ServiceDescriptor {descriptor: ROOT_DESCRIPTOR_DEMO, descMap: getDescriptorMapDemo()}
 service "ProductCatalogService" on ep {
     final Product[] & readonly products;
+    
     function init() returns error? {
         json productsJson = check io:fileReadJson(productJsonPath);
         Product[] products = check parseProductJson(productsJson);

@@ -4,14 +4,12 @@ import ballerina/log;
 
 listener grpc:Listener ep = new (9094);
 
-//TODO mock tests
-
-configurable string cartUrl = "localhost";
-configurable string catalogUrl = "localhost";
-configurable string currencyUrl = "localhost";
-configurable string shippingUrl = "localhost";
-configurable string paymentUrl = "localhost";
-configurable string emailUrl = "localhost";
+configurable string cartUrl = "http://localhost:9092";
+configurable string catalogUrl = "http://localhost:9091";
+configurable string currencyUrl = "http://localhost:9093";
+configurable string shippingUrl = "http://localhost:9095";
+configurable string paymentUrl = "http://localhost:9096";
+configurable string emailUrl = "http://localhost:9097";
 
 @grpc:ServiceDescriptor {descriptor: ROOT_DESCRIPTOR_DEMO, descMap: getDescriptorMapDemo()}
 service "CheckoutService" on ep {
@@ -23,12 +21,12 @@ service "CheckoutService" on ep {
     final EmailServiceClient emailClient;
     
     function init() returns error? {
-        self.cartClient = check new ("http://" + cartUrl + ":9092");
-        self.catalogClient = check new ("http://" + catalogUrl + ":9091");
-        self.currencyClient = check new ("http://" + currencyUrl + ":9093");
-        self.shippingClient = check new ("http://" + shippingUrl + ":9095");
-        self.paymentClient = check new ("http://" + paymentUrl + ":9096");
-        self.emailClient = check new ("http://" + emailUrl + ":9097");
+        self.cartClient = check new (cartUrl);
+        self.catalogClient = check new (catalogUrl);
+        self.currencyClient = check new (currencyUrl);
+        self.shippingClient = check new (shippingUrl);
+        self.paymentClient = check new ( paymentUrl);
+        self.emailClient = check new (emailUrl);
     }
 
     remote function PlaceOrder(PlaceOrderRequest value) returns PlaceOrderResponse|error {

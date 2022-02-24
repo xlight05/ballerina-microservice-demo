@@ -10,7 +10,7 @@ service "AdService" on adListener {
         self.store = new AdStore();
     }
 
-    isolated remote function GetAds(AdRequest request) returns AdResponse|error? {
+    remote function GetAds(AdRequest request) returns AdResponse|error? {
         Ad[] ads = [];
         foreach string category in request.context_keys {
             Ad[] availableAds = self.store.getAdsByCategory(category);

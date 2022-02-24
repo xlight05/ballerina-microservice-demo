@@ -26,5 +26,6 @@ isolated function parseMoneyJson(json moenyJson) returns Money|error {
 }
 
 isolated function isProductRelated(Product product, string query) returns boolean {
-    return product.name.toLowerAscii().includes(query.toLowerAscii()) || product.description.toLowerAscii().includes(query.toLowerAscii());
+    string queryLowercase = query.toLowerAscii();
+    return product.name.toLowerAscii().includes(queryLowercase) || product.description.toLowerAscii().includes(queryLowercase);
 }

@@ -8,10 +8,11 @@ boolean is_cymbal_brand = os:getEnv("CYMBAL_BRANDING") == "true";
 
 type ProductView record {
     Product product;
-    Money price;
+    string price;
 };
+
 service / on ep {
-    
+
     resource function get .() returns json|error {
 
         string[] supportedCurrencies = check getSupportedCurrencies();
@@ -21,7 +22,7 @@ service / on ep {
         foreach Product product in products {
             productView.push({
                 product,
-                price: check convertCurrency(product.price_usd, userCurrency)
+                price: renderMoney(check convertCurrency(product.price_usd, userCurrency))
             });
         }
         string platformEnv = os:getEnv("ENV_PLATFORM");
@@ -29,24 +30,51 @@ service / on ep {
             platformEnv = "local";
         }
         return {
-            session_id : userId,
-            request_id : userId,
-            user_currency : userCurrency,
-            show_currency : true,
-            currencies : supportedCurrencies,
-            products : productView.toJson(),
-            cart_size : cart.items.length(),
+            session_id: userId,
+            request_id: userId,
+            user_currency: userCurrency,
+            show_currency: true,
+            currencies: supportedCurrencies,
+            products: productView.toJson(),
+            cart_size: cart.items.length(),
             banner_color: os:getEnv("BANNER_COLOR"),
-            ad : check chooseAd([]),
-            platform_css : platformEnv,
-            platform_name : platformEnv,
-            is_cymbal_brand : is_cymbal_brand
+            ad: check chooseAd([]),
+            platform_css: platformEnv,
+            platform_name: platformEnv,
+            is_cymbal_brand: is_cymbal_brand
         };
     }
 
-    resource function get product/[int id]() returns json {
-        return {};
+    resource function get product/[string id]() returns json|error {
+        Product product = check getProduct(id);
+        string[] currencies = check getSupportedCurrencies(); //TODO remove
+        Cart cart = check getCart(userId); // TODO remove
+        map<json> productMap = <map<json>>product.toJson();
+        productMap["price"] = renderMoney(check convertCurrency(product.price_usd, userCurrency));
+        Product[] recommendations = check getRecommendations(userId, [id]);
+
+        string platformEnv = os:getEnv("ENV_PLATFORM"); //TODO remove
+        if (platformEnv == "") {
+            platformEnv = "local";
+        }
+
+        return {
+            session_id: userId,
+            request_id: userId,
+            user_currency: userCurrency,
+            show_currency: true,
+            currencies: currencies,
+            product:  productMap.toJson(),
+            recommendations: recommendations,
+            cart_size: cart.length(),
+            platform_css: platformEnv,
+            platform_name: platformEnv,
+            is_cymbal_brand: is_cymbal_brand,
+            ad: check chooseAd(product.categories)
+        };
     }
+
+    
 
     resource function post setCurrency() returns json {
         return {};
@@ -55,7 +83,6 @@ service / on ep {
     resource function get logout() returns json {
         return {};
     }
-
 
     // resource function get .() returns http:Ok {
     //     return {
